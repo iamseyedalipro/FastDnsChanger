@@ -39,7 +39,8 @@
 ### Downloading the Executable
 
 1. Go to the [Releases](https://github.com/iamseyedalipro/FastDnsChanger/releases) page.
-2. Download the latest executable file (`FastDnsChanger.exe`).
+2. Download the latest executable file (`FastDnsChanger.zip`).
+3. Extract the zip file.
 3. Run the executable file.
 
 ## Usage
