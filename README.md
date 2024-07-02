@@ -33,7 +33,7 @@
 
 3. Run the application:
     ```sh
-    python fastdnschanger.py
+    python main.py
     ```
 
 ### Downloading the Executable
