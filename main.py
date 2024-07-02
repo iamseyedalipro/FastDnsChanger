@@ -51,7 +51,9 @@ class DNSChangerApp:
         self.root.title("DNS Changer")
         self.root.geometry("500x300")
         self.root.resizable(False, False)
-        
+        photo = tk.PhotoImage(file = 'dnsicon.png')
+        self.root.wm_iconphoto(False, photo)
+
         self.selected_option = tk.StringVar()
         self.interface_selected_option = tk.StringVar()
         
