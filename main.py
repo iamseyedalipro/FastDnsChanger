@@ -3,12 +3,80 @@ from tkinter import ttk
 import ctypes
 import subprocess
 import psutil
+import socket
+import time
+from dns import resolver
+
+def measure_dns_speed(dns_ip):
+    """
+    Measure the DNS resolution time for a given DNS server IP.
+
+    Args:
+        dns_ip (str): The DNS server IP address.
+        update_callback (function): Callback function to update UI with results.
+
+    Returns:
+        float: The DNS resolution time in milliseconds.
+    """
+    res = resolver.Resolver()
+    res.nameservers = [dns_ip]
+    test_domain = "chatgpt.com"
+
+    start_time = time.time()
+    try:
+        res.resolve(test_domain)
+    except Exception as e:
+        
+        return float('inf')
+
+    end_time = time.time()
+    resolution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+    # result = f"DNS {dns_ip} speed: {resolution_time:.2f} ms"
+    return resolution_time
+
+
+def find_fastest_dns(dns_dict, update_callback):
+    """
+    Find the fastest DNS server from a dictionary of DNS servers.
+
+    Args:
+        dns_dict (dict): Dictionary of DNS server names and their IPs.
+        update_callback (function): Callback function to update UI with results.
+
+    Returns:
+        str: The name of the fastest DNS server.
+    """
+    best_time = float('inf')
+    best_server = None
+
+    for server, ips in dns_dict.items():
+        primary_time = measure_dns_speed(ips[0])
+        secondary_time = measure_dns_speed(ips[1])
+        avg_time = (primary_time + secondary_time) / 2
+
+        result = f"{server} DNS average speed: {avg_time:.2f} ms"
+        print(result)
+        update_callback(result)
+
+        if avg_time < best_time:
+            best_time = avg_time
+            best_server = server
+
+    return best_server
+
+
 
 dns = {
     "Shecan": ["178.22.122.100", "185.51.200.2"],
     "403": ["10.202.10.202", "10.202.10.102"],
     "Begzar": ["185.55.226.26", "185.55.225.25"],
-    "Electro": ["78.157.42.101", "78.157.42.100"]
+    "Electro": ["78.157.42.101", "78.157.42.100"],
+    "Hostiran": ["172.29.2.100", "172.29.0.100"],
+    "Radar": ["10.202.10.10", "10.202.10.11"],
+    "Shatel": ["85.15.1.14", "85.15.1.15"],
+    "Level3": ["209.244.0.3", "209.244.0.4"],
+    "OpenDNS": ["208.67.222.222", "208.67.220.220"]
+
 }
 
 class ToolTip:
@@ -66,7 +134,17 @@ class DNSChangerApp:
         
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.bind('<Control-Return>', lambda event: self.connect())
+        self.root.bind('<Control-Shift-Return>', lambda event: self.check_speed_and_connect())
         self.root.bind('<Alt-Return>', lambda event: self.disconnect())
+        self.root.bind('<Control-s>', lambda event: self.next_server())
+    
+
+    def next_server(self):
+        current_index = list(dns.keys()).index(self.selected_option.get())
+        next_index = (current_index + 1) % len(dns)
+        self.selected_option.set(list(dns.keys())[next_index])
+        
+
 
     def setup_ui(self):
         """
@@ -94,6 +172,11 @@ class DNSChangerApp:
 
         self.status_label = tk.Label(self.root, text="Status: Disconnected", fg="red")
         self.status_label.pack(pady=10)
+
+        self.check_speed_button = tk.Button(frame, text="Check Speed and Connect", command=self.check_speed_and_connect)
+        self.check_speed_button.pack(side=tk.LEFT, padx=5)
+        ToolTip(self.check_speed_button, "Ctrl + Shift + Enter")
+
 
         self.error_text_box = tk.Text(self.root, height=10, width=50)
         self.error_text_box.pack(pady=10)
@@ -134,6 +217,27 @@ class DNSChangerApp:
             active_interfaces.insert(0, wifi_interface)
 
         return active_interfaces
+
+    def check_speed_and_connect(self):
+        self.disable_buttons()
+        self.error_text_box.delete("1.0", tk.END)
+        self.status_label.config(text="Status: Checking DNS speeds...", fg="blue")
+        self.root.update()
+
+        def update_callback(result):
+            self.error_text_box.insert(tk.END, result + '\n')
+            self.error_text_box.see(tk.END)
+            self.root.update_idletasks()
+
+        fastest_dns = find_fastest_dns(dns, update_callback)
+
+        if fastest_dns:
+            self.selected_option.set(fastest_dns)
+            self.connect()
+        else:
+            self.status_label.config(text="Status: Failed to determine fastest DNS", fg="red")
+
+        self.enable_buttons()
 
     def set_dns(self, interface, ip1, ip2):
         """
