@@ -1,0 +1,5 @@
+{
+  "alg": "ed25519",
+  "payload": "{\"base_urls\":[\"https://panel.helloqweqwe.ir/api/v1/\"],\"issued_at\":\"2026-07-24T13:53:15Z\",\"version\":2}",
+  "sig": "+aofLhg8MtQiGCZJAVqB2i2N1s5/mTR2YDKq2LqS2wLovYLwmtav17LMvtmQCeSGZ1RyRgYywXpdkqeh9HkBAQ=="
+}
